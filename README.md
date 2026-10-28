@@ -4,16 +4,9 @@ A simple classroom tool for figuring out how to round decimals.
 
 **Live tool:** https://mrpiercey.github.io/decimal-numberline/
 
-Students type the two numbers their number is between (for example `3.7` and `3.8`),
-choose how to break the line up (whole numbers, tenths, hundredths, or thousandths),
-type the number they are looking for (for example `3.785`), then click or tap on the
-number line to put a dot where they think it goes. The dot shows its value, so they can
-see which tick mark it is closest to. "Show the halfway marks" draws the midpoint between
-each pair of ticks, and "Check my dot" reveals where the number really is and which two
-tick marks it sits between.
+Students type a starting point, then an ending point (the second box unlocks once the first is filled in), then choose how to break the line up: whole numbers, tenths, hundredths, or thousandths. Each choice shows how many tick marks it would make, so students can reason about which size pieces will help. Then they click or tap to put a dot on the line, drag it, and read its value to see which tick mark it is closest to. "Show the halfway marks" draws the midpoint between each pair of ticks.
 
-There are no questions built in. It is just the number line, so it works with any
-rounding problem you give them.
+Styled in Ashland Elementary green, gold, and navy. There are no questions built in, so it works with any rounding problem you give them.
 
 ## Files
 
