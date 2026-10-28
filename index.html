@@ -190,9 +190,9 @@
     if (lo === hi) { state.valid = false; msg.textContent = 'The two ends of the number line need to be different numbers.'; draw(); return; }
     if (lo > hi) { var tmp = lo; lo = hi; hi = tmp; $('lo').value = String(lo); $('hi').value = String(hi); }
 
-    // Snapping precision: one place finer than the tick step, or as fine as the typed numbers, max 4.
+    // Snapping precision: one place finer than the tick step, or as fine as the typed numbers, never past thousandths.
     var P = Math.max(state.d + 1, decimalsOf($('lo').value), decimalsOf($('hi').value), t === null ? 0 : decimalsOf(tStr));
-    P = Math.min(Math.max(P, 1), 4);
+    P = Math.min(Math.max(P, 1), 3);
     var oldP = state.P;
     var oldDot = state.dot;
     state.P = P;
