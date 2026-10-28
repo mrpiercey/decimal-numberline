@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decimal Number Line</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --card: #ffffff;
+    --ink: #1c2331;
+    --muted: #5b6475;
+    --line: #1c2331;
+    --accent: #2563eb;
+    --accent-ink: #ffffff;
+    --dot: #e11d48;
+    --target: #16a34a;
+    --half: #f59e0b;
+    --border: #d9dde6;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { padding: 16px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: 0.95rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label, .field .lbl { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+  .field input[type=text] { font-size: 1.35rem; padding: 8px 10px; width: 130px; border: 2px solid var(--border); border-radius: 8px; font-variant-numeric: tabular-nums; }
+  .field input[type=text]:focus { outline: none; border-color: var(--accent); }
+  .between { display: flex; align-items: flex-end; gap: 10px; }
+  .between .to { padding-bottom: 12px; font-weight: 600; color: var(--muted); }
+  .seg { display: inline-flex; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; background: #fff; color: var(--ink); padding: 10px 14px; font-size: 0.95rem; cursor: pointer; border-right: 1px solid var(--border); }
+  .seg button:last-child { border-right: 0; }
+  .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .btn { border: 0; border-radius: 8px; padding: 11px 16px; font-size: 1rem; cursor: pointer; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .btn.secondary { background: #e8ecf4; color: var(--ink); }
+  .btn.check { background: var(--target); }
+  .chk { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; padding-bottom: 10px; }
+  .chk input { width: 18px; height: 18px; }
+  .msg { min-height: 1.4em; margin-top: 10px; font-size: 0.95rem; color: #b91c1c; }
+  .linebox { position: relative; }
+  svg { width: 100%; height: auto; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  svg text { font-family: inherit; font-variant-numeric: tabular-nums; }
+  .hint { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+  .readout { font-size: 1.25rem; margin-top: 10px; min-height: 1.6em; }
+  .readout b { color: var(--dot); font-size: 1.5rem; }
+  .checktext { margin-top: 8px; font-size: 1.05rem; color: #14532d; min-height: 1.4em; }
+  .foot { color: var(--muted); font-size: 0.8rem; text-align: center; margin-top: 8px; }
+  @media (max-width: 600px) {
+    .field input[type=text] { width: 110px; font-size: 1.2rem; }
+    .seg button { padding: 9px 10px; font-size: 0.85rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Decimal Number Line</h1>
+  <p class="sub">A tool for figuring out how to round decimals. Type the two numbers your number is between, pick how to break the line up, then put a dot where your number goes.</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="between">
+        <div class="field">
+          <label for="lo">My number line goes from</label>
+          <input id="lo" type="text" inputmode="decimal" value="3.7" autocomplete="off">
+        </div>
+        <div class="to">to</div>
+        <div class="field">
+          <label for="hi">&nbsp;</label>
+          <input id="hi" type="text" inputmode="decimal" value="3.8" autocomplete="off">
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl">Break it into</span>
+        <div class="seg" id="seg">
+          <button data-d="0">Whole numbers</button>
+          <button data-d="1">Tenths</button>
+          <button data-d="2" class="on">Hundredths</button>
+          <button data-d="3">Thousandths</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="target">The number I'm looking for</label>
+        <input id="target" type="text" inputmode="decimal" value="" placeholder="3.785" autocomplete="off">
+      </div>
+      <button class="btn" id="draw">Draw number line</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="margin-bottom:8px">
+      <label class="chk"><input type="checkbox" id="half"> Show the halfway marks</label>
+      <button class="btn secondary" id="clear">Clear my dot</button>
+      <button class="btn check" id="check">Check my dot</button>
+    </div>
+    <div class="linebox">
+      <svg id="svg" role="img" aria-label="Number line" tabindex="0"></svg>
+    </div>
+    <div class="hint">Click or tap on the line to put your dot down. Drag it to move it. Arrow keys nudge it.</div>
+    <div class="readout" id="readout"></div>
+    <div class="checktext" id="checktext"></div>
+  </div>
+  <div class="foot">Decimal Number Line &middot; free classroom tool</div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var svg = $('svg'), readout = $('readout'), checktext = $('checktext'), msg = $('msg');
+  var NS = 'http://www.w3.org/2000/svg';
+
+  // State. All positions are integers in "units" of 10^-P to avoid float drift.
+  var state = {
+    d: 2,          // decimals of the tick step (0 = ones, 1 = tenths, 2 = hundredths, 3 = thousandths)
+    P: 3,          // decimals of the snapping unit for the dot
+    lo: 0, hi: 0,  // endpoints in units
+    target: null,  // target in units (or null)
+    dot: null,     // dot position in units (or null)
+    ticks: [],     // tick positions in units
+    valid: false,
+    showHalf: false,
+    checked: false
+  };
+
+  var geom = { W: 1000, H: 200, padL: 40, padR: 40, y: 110 };
+
+  function pow10(n) { return Math.pow(10, n); }
+  function decimalsOf(str) {
+    var m = String(str).trim().match(/\.(\d+)$/);
+    return m ? m[1].length : 0;
+  }
+  function parseNum(str) {
+    var s = String(str).trim();
+    if (!/^-?\d*\.?\d+$/.test(s) && !/^-?\d+\.?$/.test(s)) return NaN;
+    return parseFloat(s);
+  }
+  function toUnits(x) { return Math.round(x * pow10(state.P)); }
+  function fmtUnits(u, dec) {
+    // Format units as a decimal string with `dec` decimal places (default: P)
+    if (dec === undefined) dec = state.P;
+    var v = u / pow10(state.P);
+    return v.toFixed(dec);
+  }
+  function fmtTrim(u) {
+    // Trim trailing zeros but keep at least the step precision
+    var s = fmtUnits(u, state.P);
+    if (s.indexOf('.') >= 0) {
+      s = s.replace(/0+$/, '');
+      var dec = s.split('.')[1] || '';
+      while (dec.length < state.d) { s += '0'; dec += '0'; }
+      if (s.slice(-1) === '.') s = s.slice(0, -1);
+    }
+    return s;
+  }
+
+  function xOf(u) {
+    var span = state.hi - state.lo;
+    return geom.padL + (u - state.lo) / span * (geom.W - geom.padL - geom.padR);
+  }
+  function uOf(x) {
+    var span = state.hi - state.lo;
+    var frac = (x - geom.padL) / (geom.W - geom.padL - geom.padR);
+    var u = state.lo + frac * span;
+    u = Math.max(state.lo, Math.min(state.hi, u));
+    return Math.round(u);
+  }
+
+  function el(name, attrs, text) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function build() {
+    msg.textContent = '';
+    checktext.textContent = '';
+    state.checked = false;
+    var lo = parseNum($('lo').value), hi = parseNum($('hi').value);
+    var tStr = $('target').value.trim();
+    var t = tStr === '' ? null : parseNum(tStr);
+    if (isNaN(lo) || isNaN(hi)) { state.valid = false; msg.textContent = 'Type a number in both boxes for the ends of your number line.'; draw(); return; }
+    if (t !== null && isNaN(t)) { state.valid = false; msg.textContent = 'The number you are looking for has to be a number (like 3.785).'; draw(); return; }
+    if (lo === hi) { state.valid = false; msg.textContent = 'The two ends of the number line need to be different numbers.'; draw(); return; }
+    if (lo > hi) { var tmp = lo; lo = hi; hi = tmp; $('lo').value = String(lo); $('hi').value = String(hi); }
+
+    // Snapping precision: one place finer than the tick step, or as fine as the typed numbers, max 4.
+    var P = Math.max(state.d + 1, decimalsOf($('lo').value), decimalsOf($('hi').value), t === null ? 0 : decimalsOf(tStr));
+    P = Math.min(Math.max(P, 1), 4);
+    var oldP = state.P;
+    var oldDot = state.dot;
+    state.P = P;
+    state.lo = toUnits(lo); state.hi = toUnits(hi);
+    state.target = t === null ? null : toUnits(t);
+    // Keep the dot where it was (rescale to new precision) if it's still on the line.
+    if (oldDot !== null) {
+      var scaled = Math.round(oldDot * pow10(P - oldP));
+      state.dot = (scaled >= state.lo && scaled <= state.hi) ? scaled : null;
+    }
+
+    var step = pow10(P - state.d); // tick step in units
+    var count = (state.hi - state.lo) / step;
+    if (count > 100) {
+      state.valid = false;
+      msg.textContent = 'That would make ' + Math.floor(count) + ' tick marks. Pick a bigger breakdown, or move the ends closer together.';
+      draw(); return;
+    }
+    var ticks = [];
+    // Start at the first multiple of step that is >= lo
+    var first = Math.ceil(state.lo / step) * step;
+    for (var u = first; u <= state.hi; u += step) ticks.push(u);
+    state.ticks = ticks;
+    state.valid = true;
+    draw();
+  }
+
+  function draw() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var W = geom.W, H = geom.H, y = geom.y;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    if (!state.valid) {
+      svg.appendChild(el('line', { x1: geom.padL, y1: y, x2: W - geom.padR, y2: y, stroke: '#c7ccd6', 'stroke-width': 4, 'stroke-linecap': 'round' }));
+      readout.textContent = '';
+      return;
+    }
+    var small = W < 600;
+    var fs = small ? 15 : 18;
+
+    // Main line with arrow heads
+    svg.appendChild(el('line', { x1: geom.padL - 14, y1: y, x2: W - geom.padR + 14, y2: y, stroke: '#1c2331', 'stroke-width': 4, 'stroke-linecap': 'round' }));
+    svg.appendChild(el('path', { d: 'M' + (geom.padL - 24) + ' ' + y + ' l12 -8 v16 z', fill: '#1c2331' }));
+    svg.appendChild(el('path', { d: 'M' + (W - geom.padR + 24) + ' ' + y + ' l-12 -8 v16 z', fill: '#1c2331' }));
+
+    // Which ticks get labels
+    var n = state.ticks.length;
+    var usable = W - geom.padL - geom.padR;
+    var labelW = (fs * 0.62) * (fmtUnits(state.hi, state.d).length + 1);
+    var maxLabels = Math.max(2, Math.floor(usable / labelW) + 1);
+    var every = 1;
+    if (n > maxLabels) {
+      var opts = [2, 5, 10, 20, 25, 50];
+      for (var i = 0; i < opts.length; i++) { every = opts[i]; if (Math.ceil(n / every) <= maxLabels) break; }
+    }
+
+    // Halfway marks
+    if (state.showHalf) {
+      for (var h = 0; h < n - 1; h++) {
+        var mid = (state.ticks[h] + state.ticks[h + 1]) / 2;
+        var hx = xOf(mid);
+        svg.appendChild(el('line', { x1: hx, y1: y - 22, x2: hx, y2: y + 22, stroke: '#f59e0b', 'stroke-width': 3, 'stroke-dasharray': '5 4' }));
+        svg.appendChild(el('text', { x: hx, y: y - 28, 'text-anchor': 'middle', 'font-size': 12, fill: '#b45309' }, 'half'));
+      }
+    }
+
+    // Ticks and labels
+    for (var k = 0; k < n; k++) {
+      var u = state.ticks[k], x = xOf(u);
+      var labeled = (k % every === 0) || k === n - 1;
+      var len = labeled ? 18 : 11;
+      svg.appendChild(el('line', { x1: x, y1: y - len, x2: x, y2: y + len, stroke: '#1c2331', 'stroke-width': labeled ? 3 : 2 }));
+      if (labeled) {
+        svg.appendChild(el('text', { x: x, y: y + len + fs + 6, 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 600, fill: '#1c2331' }, fmtUnits(u, state.d)));
+      }
+    }
+    // Endpoints that are not on a tick (e.g. 3.75 to 3.8 broken into tenths)
+    [state.lo, state.hi].forEach(function (u) {
+      if (state.ticks.indexOf(u) === -1) {
+        var x = xOf(u);
+        svg.appendChild(el('line', { x1: x, y1: y - 18, x2: x, y2: y + 18, stroke: '#1c2331', 'stroke-width': 3 }));
+        svg.appendChild(el('text', { x: x, y: y + 18 + fs + 6, 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 600, fill: '#1c2331' }, fmtTrim(u)));
+      }
+    });
+
+    // Revealed target (after Check)
+    if (state.checked && state.target !== null && state.target >= state.lo && state.target <= state.hi) {
+      var tx = xOf(state.target);
+      svg.appendChild(el('path', { d: 'M' + tx + ' ' + (y - 6) + ' l-11 -18 h22 z', fill: '#16a34a' }));
+      svg.appendChild(el('text', { x: tx, y: y - 30, 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 700, fill: '#15803d' }, fmtTrim(state.target)));
+    }
+
+    // The student's dot
+    if (state.dot !== null) {
+      var dx = xOf(state.dot);
+      var lift = state.checked ? 26 : 0;
+      svg.appendChild(el('line', { x1: dx, y1: y - 46 - lift, x2: dx, y2: y, stroke: '#e11d48', 'stroke-width': 2, 'stroke-dasharray': '3 3' }));
+      svg.appendChild(el('circle', { cx: dx, cy: y, r: 13, fill: '#e11d48', stroke: '#fff', 'stroke-width': 3 }));
+      var label = el('text', { x: dx, y: y - 52 - lift, 'text-anchor': 'middle', 'font-size': fs + 2, 'font-weight': 700, fill: '#e11d48' }, fmtTrim(state.dot));
+      svg.appendChild(label);
+      readout.innerHTML = 'Your dot is at <b>' + fmtTrim(state.dot) + '</b>';
+    } else {
+      readout.textContent = '';
+    }
+  }
+
+  // Pointer handling
+  var dragging = false;
+  function svgX(evt) {
+    var r = svg.getBoundingClientRect();
+    return (evt.clientX - r.left) / r.width * geom.W;
+  }
+  function placeFromEvent(evt) {
+    if (!state.valid) return;
+    state.dot = uOf(svgX(evt));
+    state.checked = false; checktext.textContent = '';
+    draw();
+  }
+  svg.addEventListener('pointerdown', function (e) {
+    if (!state.valid) return;
+    dragging = true;
+    try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+    placeFromEvent(e);
+    svg.focus();
+    e.preventDefault();
+  });
+  svg.addEventListener('pointermove', function (e) { if (dragging) placeFromEvent(e); });
+  svg.addEventListener('pointerup', function () { dragging = false; });
+  svg.addEventListener('pointercancel', function () { dragging = false; });
+  svg.addEventListener('keydown', function (e) {
+    if (!state.valid || state.dot === null) return;
+    var big = e.shiftKey ? pow10(state.P - state.d) : 1;
+    if (e.key === 'ArrowLeft') { state.dot = Math.max(state.lo, state.dot - big); }
+    else if (e.key === 'ArrowRight') { state.dot = Math.min(state.hi, state.dot + big); }
+    else return;
+    e.preventDefault();
+    state.checked = false; checktext.textContent = '';
+    draw();
+  });
+
+  // Controls
+  $('draw').addEventListener('click', build);
+  ['lo', 'hi', 'target'].forEach(function (id) {
+    $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') build(); });
+    $(id).addEventListener('change', build);
+  });
+  $('seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    Array.prototype.forEach.call($('seg').children, function (c) { c.classList.remove('on'); });
+    b.classList.add('on');
+    state.d = parseInt(b.getAttribute('data-d'), 10);
+    build();
+  });
+  $('half').addEventListener('change', function () { state.showHalf = $('half').checked; draw(); });
+  $('clear').addEventListener('click', function () { state.dot = null; state.checked = false; checktext.textContent = ''; draw(); });
+
+  $('check').addEventListener('click', function () {
+    if (!state.valid) return;
+    if (state.target === null) { checktext.textContent = 'Type the number you are looking for first.'; return; }
+    var t = state.target;
+    if (t < state.lo || t > state.hi) {
+      checktext.textContent = fmtTrim(t) + ' is not between ' + fmtTrim(state.lo) + ' and ' + fmtTrim(state.hi) + '. Change the ends of your number line.';
+      return;
+    }
+    state.checked = true;
+    var parts = [];
+    if (state.dot === null) {
+      parts.push('The green arrow shows where ' + fmtTrim(t) + ' really is. Try putting your dot there.');
+    } else if (state.dot === t) {
+      parts.push('Your dot is right on ' + fmtTrim(t) + '!');
+    } else {
+      parts.push('Your dot is ' + fmtTrim(Math.abs(state.dot - t)) + ' away from ' + fmtTrim(t) + '. The green arrow shows where it really is.');
+    }
+    // Which two tick marks is it between?
+    var step = pow10(state.P - state.d);
+    var below = Math.floor(t / step) * step, above = below + step;
+    if (below === t) {
+      parts.push(fmtTrim(t) + ' lands exactly on the tick mark ' + fmtUnits(t, state.d) + '.');
+    } else {
+      var dB = t - below, dA = above - t;
+      var s = fmtTrim(t) + ' is between ' + fmtUnits(below, state.d) + ' and ' + fmtUnits(above, state.d) + '. ';
+      if (dB === dA) s += 'It is exactly halfway between them. Which way does the rounding rule say to go?';
+      else s += 'It is ' + fmtTrim(dB) + ' from ' + fmtUnits(below, state.d) + ' and ' + fmtTrim(dA) + ' from ' + fmtUnits(above, state.d) + '. Which one is it closer to?';
+      parts.push(s);
+    }
+    checktext.textContent = parts.join(' ');
+    draw();
+  });
+
+  // Keep the drawing crisp at any width
+  function fit() {
+    var w = svg.parentNode.clientWidth || 1000;
+    geom.W = Math.max(320, Math.round(w));
+    geom.padL = geom.W < 600 ? 32 : 48;
+    geom.padR = geom.padL;
+    draw();
+  }
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(svg.parentNode);
+  else window.addEventListener('resize', fit);
+
+  build();
+  fit();
+})();
+</script>
+</body>
+</html>
